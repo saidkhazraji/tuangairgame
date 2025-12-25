@@ -84,7 +84,7 @@
             width: 100%;
             height: 0%;
             background: linear-gradient(to top, #2196f3, #03a9f4);
-            transition: height 0.3s;
+            transition: height 0.1s;
             border-radius: 0 0 32px 32px;
         }
 
@@ -106,24 +106,22 @@
             background: linear-gradient(to right, #1a2980, #26d0ce);
             color: white;
             border: none;
-            padding: 15px 30px;
-            margin: 10px;
+            padding: 20px 40px;
+            margin: 15px;
             border-radius: 50px;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.1s;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            min-width: 200px;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            min-width: 250px;
+            user-select: none;
+            touch-action: manipulation;
         }
 
         .btn:active {
-            transform: translateY(1px);
+            transform: scale(0.95);
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
         }
 
         .btn-danger {
@@ -197,6 +195,12 @@
             margin: 10px 0;
         }
 
+        .pour-speed {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+
         /* Responsif */
         @media (max-width: 600px) {
             .container {
@@ -205,9 +209,9 @@
             }
             
             .btn {
-                padding: 12px 20px;
-                font-size: 16px;
-                min-width: 150px;
+                padding: 18px 30px;
+                font-size: 18px;
+                min-width: 220px;
             }
             
             .glass-container {
@@ -235,11 +239,12 @@
                 <p>1. Dua pemain bergantian menuangkan air ke dalam gelas</p>
                 <p>2. Sebelum menuang, kamu bisa melihat air selama <strong>5 detik</strong></p>
                 <p>3. Saat menuang, layar akan gelap total</p>
-                <p>4. Tahan tombol "TUANG AIR" untuk menuang</p>
-                <p>5. Lepaskan tombol untuk berhenti menuang</p>
-                <p>6. Game akan otomatis berganti pemain</p>
-                <p>7. Jangan sampai gelas meluap (melebihi 1000mL)!</p>
-                <p>8. Pemain yang membuat gelas meluap kalah</p>
+                <p>4. <strong>KLIK atau TAHAN tombol "TUANG AIR" untuk menuang</strong></p>
+                <p>5. <strong>KLIK SEKALI: +3%</strong> | <strong>TAHAN: +10% per detik</strong></p>
+                <p>6. Lepaskan tombol untuk berhenti menuang</p>
+                <p>7. Game otomatis berganti pemain setelah menuang</p>
+                <p>8. Jangan sampai gelas meluap (melebihi 1000mL)!</p>
+                <p>9. Pemain yang membuat gelas meluap kalah</p>
             </div>
             <button class="btn btn-success" onclick="startGame()">MULAI GAME</button>
         </div>
@@ -252,6 +257,7 @@
                 <div id="playerTurn">Pemain 1 sedang melihat air</div>
                 <div class="current-water">Air saat ini: <span id="currentWater">0</span> mL</div>
                 <div class="current-water">Kapasitas: 1000 mL</div>
+                <div class="pour-speed">Klik: +30mL (3%) | Tahan: +100mL/detik (10%)</div>
             </div>
 
             <div class="glass-container">
@@ -269,13 +275,18 @@
 
             <div id="actionPhase" style="display: none;">
                 <button class="btn" id="pourBtn" 
-                        onmousedown="startPouring()" 
-                        onmouseup="stopPouringAndSwitch()"
-                        ontouchstart="startPouring()" 
-                        ontouchend="stopPouringAndSwitch()">
-                    TUANG AIR
+                        onmousedown="startFastPouring()" 
+                        onmouseup="stopPouring()" 
+                        onmouseleave="stopPouring()"
+                        ontouchstart="startFastPouring()" 
+                        ontouchend="stopPouring()">
+                    KLIK / TAHAN UNTUK TUANG AIR
                 </button>
-                <p style="margin-top: 10px; color: #666;">Tahan tombol untuk menuang, lepaskan untuk berhenti</p>
+                <p style="margin-top: 10px; color: #666;">
+                    <strong>Klik sekali: +30mL (3%)</strong> | 
+                    <strong>Tahan: +100mL per detik (10%)</strong>
+                </p>
+                <p style="color: #888; font-size: 14px;">Lepaskan tombol untuk berhenti</p>
             </div>
             
             <div class="creator-credit" style="margin-top: 20px;">
@@ -289,6 +300,7 @@
             <div class="player-info">
                 <div id="winnerText"></div>
                 <div class="current-water">Total air: <span id="finalWater">0</span> mL</div>
+                <div id="pourStats" style="font-size: 16px;"></div>
             </div>
             <button class="btn" onclick="restartGame()">MAIN LAGI</button>
             <button class="btn btn-success" onclick="goToMenu()">KEMBALI KE MENU</button>
@@ -301,17 +313,22 @@
     <!-- Layar Gelap Saat Menuang -->
     <div id="darkScreen" class="dark-screen" style="display: none;">
         <div class="btn-container">
-            <h2 style="color: white; margin-bottom: 30px;">LAYAR GELAP - MENUANG AIR</h2>
+            <h2 style="color: white; margin-bottom: 30px; font-size: 24px;">LAYAR GELAP - MENUANG AIR</h2>
             <button class="btn" id="darkPourBtn" 
-                    onmousedown="startPouring()" 
-                    onmouseup="stopPouringAndSwitch()"
-                    ontouchstart="startPouring()" 
-                    ontouchend="stopPouringAndSwitch()">
-                TAHAN UNTUK MENUANG
+                    onmousedown="startFastPouring()" 
+                    onmouseup="stopPouring()" 
+                    onmouseleave="stopPouring()"
+                    ontouchstart="startFastPouring()" 
+                    ontouchend="stopPouring()"
+                    style="font-size: 22px; padding: 25px 50px;">
+                KLIK / TAHAN UNTUK TUANG
             </button>
-            <p style="color: white; margin-top: 20px;">Tahan tombol untuk menuang, lepaskan untuk berhenti</p>
-            <p style="color: #aaa; font-size: 14px; margin-top: 10px;">Game akan otomatis berganti pemain</p>
-            <p style="color: #aaa; font-size: 14px; margin-top: 5px;">Game oleh Said Khazraji</p>
+            <div style="color: white; margin-top: 20px; text-align: center;">
+                <p><strong>Klik sekali: +30mL (3%)</strong></p>
+                <p><strong>Tahan: +100mL per detik (10%)</strong></p>
+                <p>Lepaskan tombol untuk berhenti</p>
+            </div>
+            <p style="color: #aaa; font-size: 14px; margin-top: 20px;">Game oleh Said Khazraji</p>
         </div>
     </div>
 
@@ -321,10 +338,19 @@
         const maxCapacity = 1000;
         let currentPlayer = 1;
         let gameActive = true;
-        let pouringInterval;
         let viewTimer;
         let secondsLeft = 5;
+        let pouringInterval;
         let isPouring = false;
+        let pourStartTime = 0;
+        let lastPourTime = 0;
+        let pourCount = 0;
+        let totalPourTime = 0;
+        
+        // Konstanta menuang
+        const CLICK_AMOUNT = 30; // 30mL per klik (3%)
+        const HOLD_AMOUNT = 100; // 100mL per detik (10%)
+        const POUR_SPEED = 50; // Interval menuang lebih cepat (50ms)
 
         // Elemen DOM
         const waterFill = document.getElementById('waterFill');
@@ -336,6 +362,7 @@
         const actionPhase = document.getElementById('actionPhase');
         const darkScreen = document.getElementById('darkScreen');
         const countdownDisplay = document.getElementById('countdown');
+        const pourStatsDisplay = document.getElementById('pourStats');
 
         // Fungsi untuk memulai game
         function startGame() {
@@ -349,8 +376,9 @@
             currentWater = 0;
             currentPlayer = 1;
             gameActive = true;
-            isPouring = false;
             secondsLeft = 5;
+            pourCount = 0;
+            totalPourTime = 0;
             updateWaterDisplay();
             updatePlayerDisplay();
         }
@@ -369,6 +397,7 @@
             countdownDisplay.textContent = secondsLeft;
             viewPhase.style.display = 'block';
             actionPhase.style.display = 'none';
+            darkScreen.style.display = 'none';
             updatePlayerDisplay();
 
             playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang melihat air`;
@@ -387,49 +416,86 @@
         // Mulai fase menuang (layar gelap)
         function startPourPhase() {
             viewPhase.style.display = 'none';
+            actionPhase.style.display = 'block';
             darkScreen.style.display = 'flex';
-            playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang menuang (layar gelap)`;
+            playerTurnDisplay.textContent = `Pemain ${currentPlayer} - Klik atau tahan untuk menuang`;
         }
 
-        // Mulai menuang air
-        function startPouring() {
+        // Mulai menuang dengan sistem cepat
+        function startFastPouring() {
             if (!gameActive || isPouring) return;
             
             isPouring = true;
-            playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang menuang...`;
-
+            pourStartTime = Date.now();
+            pourCount++;
+            lastPourTime = pourStartTime;
+            
+            // Tambah air untuk klik pertama
+            addWater(CLICK_AMOUNT);
+            
+            // Mulai interval untuk menuang saat tombol ditahan
             pouringInterval = setInterval(() => {
-                currentWater += 10; // 10mL per interval
-                if (currentWater > maxCapacity) {
-                    currentWater = maxCapacity;
-                    endGame();
+                const currentTime = Date.now();
+                const timeDiff = currentTime - lastPourTime;
+                
+                if (timeDiff >= 100) { // Tambah air setiap 100ms saat ditahan
+                    addWater(Math.floor(HOLD_AMOUNT * (timeDiff / 1000)));
+                    lastPourTime = currentTime;
                 }
-                updateWaterDisplay();
-            }, 100); // Tambah air setiap 100ms
+                
+                // Update waktu total menuang
+                totalPourTime = (Date.now() - pourStartTime) / 1000;
+                
+            }, POUR_SPEED); // Interval yang lebih cepat (50ms)
         }
 
-        // Berhenti menuang air dan langsung ganti pemain
-        function stopPouringAndSwitch() {
+        // Tambah air ke gelas
+        function addWater(amount) {
+            if (!gameActive) return;
+            
+            currentWater += amount;
+            
+            // Cek apakah gelas meluap
+            if (currentWater >= maxCapacity) {
+                currentWater = maxCapacity;
+                endGame();
+                return;
+            }
+            
+            // Update tampilan
+            updateWaterDisplay();
+            updatePourStatus();
+        }
+
+        // Berhenti menuang
+        function stopPouring() {
             if (!isPouring) return;
             
             clearInterval(pouringInterval);
             isPouring = false;
             
-            // Cek apakah game sudah berakhir
-            if (currentWater >= maxCapacity) {
-                endGame();
-                return;
-            }
+            // Hitung waktu total menuang
+            totalPourTime = (Date.now() - pourStartTime) / 1000;
             
-            // Ganti pemain otomatis
-            switchPlayer();
+            // Tampilkan statistik
+            updatePourStatus();
+            
+            // Delay sebentar lalu ganti pemain
+            setTimeout(() => {
+                if (gameActive) {
+                    switchPlayer();
+                }
+            }, 800); // Delay sedikit lebih lama agar pemain bisa melihat hasil
+        }
+
+        // Update status menuang
+        function updatePourStatus() {
+            const percentage = (currentWater / maxCapacity) * 100;
+            playerTurnDisplay.textContent = `Pemain ${currentPlayer} menuang: ${currentWater}mL (${Math.round(percentage)}%)`;
         }
 
         // Ganti pemain secara otomatis
         function switchPlayer() {
-            // Sembunyikan layar gelap
-            darkScreen.style.display = 'none';
-            
             // Ganti pemain
             currentPlayer = currentPlayer === 1 ? 2 : 1;
             
@@ -442,7 +508,18 @@
             const percentage = (currentWater / maxCapacity) * 100;
             waterFill.style.height = Math.min(percentage, 100) + '%';
             waterPercentage.textContent = Math.round(Math.min(percentage, 100)) + '%';
-            currentWaterDisplay.textContent = currentWater;
+            currentWaterDisplay.textContent = Math.round(currentWater);
+            
+            // Ubah warna air jika hampir penuh
+            if (percentage > 90) {
+                waterFill.style.background = 'linear-gradient(to top, #ff0000, #ff416c)';
+            } else if (percentage > 70) {
+                waterFill.style.background = 'linear-gradient(to top, #ff9800, #ff5722)';
+            } else if (percentage > 50) {
+                waterFill.style.background = 'linear-gradient(to top, #ffeb3b, #ff9800)';
+            } else {
+                waterFill.style.background = 'linear-gradient(to top, #2196f3, #03a9f4)';
+            }
         }
 
         // Update tampilan pemain
@@ -453,16 +530,22 @@
         // Akhiri game
         function endGame() {
             gameActive = false;
-            clearInterval(pouringInterval);
             clearInterval(viewTimer);
-            isPouring = false;
-
+            clearInterval(pouringInterval);
+            
             const winner = currentPlayer === 1 ? 2 : 1;
             document.getElementById('resultMessage').textContent = 'GELAS MELUAP!';
             document.getElementById('winnerText').textContent = 'Pemain ' + winner + ' MENANG!';
-            document.getElementById('finalWater').textContent = currentWater + ' mL';
+            document.getElementById('finalWater').textContent = Math.round(currentWater) + ' mL';
+            
+            // Tampilkan statistik
+            pourStatsDisplay.innerHTML = `
+                Total menuang: ${pourCount} kali<br>
+                Waktu menuang terakhir: ${totalPourTime.toFixed(2)} detik<br>
+                Level akhir: ${Math.round((currentWater / maxCapacity) * 100)}%
+            `;
 
-            // Sembunyikan layar gelap jika masih terbuka
+            // Sembunyikan layar gelap
             darkScreen.style.display = 'none';
             
             showScreen('resultScreen');
@@ -480,8 +563,14 @@
             showScreen('menuScreen');
         }
 
-        // Event listener untuk mencegah scroll pada mobile saat menahan tombol
+        // Event listener untuk mencegah perilaku default pada tombol
         document.addEventListener('touchstart', function(e) {
+            if(e.target.id === 'pourBtn' || e.target.id === 'darkPourBtn') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', function(e) {
             if(e.target.id === 'pourBtn' || e.target.id === 'darkPourBtn') {
                 e.preventDefault();
             }
