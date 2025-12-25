@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuang dan Tebak Gelas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a2980;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .creator-credit {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-style: italic;
+            padding: 8px;
+            background-color: #f0f8ff;
+            border-radius: 10px;
+            border-left: 4px solid #1a2980;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* Tampilan Gelas */
+        .glass-container {
+            margin: 30px auto;
+            position: relative;
+            width: 150px;
+            height: 300px;
+        }
+
+        .glass {
+            width: 150px;
+            height: 300px;
+            background: linear-gradient(to right, #e0e0e0, #f5f5f5);
+            border: 8px solid #4a5568;
+            border-bottom: 15px solid #4a5568;
+            border-radius: 0 0 40px 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, #2196f3, #03a9f4);
+            transition: height 0.3s;
+            border-radius: 0 0 32px 32px;
+        }
+
+        .water-level {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2980;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Tombol */
+        .btn {
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 200px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+        }
+
+        .btn-success {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+
+        /* Layar Gelap */
+        .dark-screen {
+            background-color: #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .dark-screen .btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Info Pemain */
+        .player-info {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff416c;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #2196f3;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .result-screen h2 {
+            color: #ff416c;
+            font-size: 32px;
+            margin: 20px 0;
+        }
+
+        .current-water {
+            font-size: 24px;
+            color: #1a2980;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* Responsif */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-width: 150px;
+            }
+            
+            .glass-container {
+                width: 120px;
+                height: 240px;
+            }
+            
+            .glass {
+                width: 120px;
+                height: 240px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Layar Menu Utama -->
+        <div id="menuScreen" class="screen active">
+            <h1>🎮 TUANG DAN TEBAK GELAS 🎮</h1>
+            <div class="creator-credit">
+                Game dibuat oleh Said Khazraji
+            </div>
+            <div class="instructions">
+                <p><strong>Cara Bermain:</strong></p>
+                <p>1. Dua pemain bergantian menuangkan air ke dalam gelas</p>
+                <p>2. Sebelum menuang, kamu bisa melihat air selama <strong>5 detik</strong></p>
+                <p>3. Saat menuang, layar akan gelap total</p>
+                <p>4. Tahan tombol "TUANG AIR" untuk menuang</p>
+                <p>5. Lepaskan tombol untuk berhenti menuang</p>
+                <p>6. Game akan otomatis berganti pemain</p>
+                <p>7. Jangan sampai gelas meluap (melebihi 1000mL)!</p>
+                <p>8. Pemain yang membuat gelas meluap kalah</p>
+            </div>
+            <button class="btn btn-success" onclick="startGame()">MULAI GAME</button>
+        </div>
+
+        <!-- Layar Game Utama -->
+        <div id="gameScreen" class="screen">
+            <h2>Giliran: <span id="currentPlayer">Pemain 1</span></h2>
+            
+            <div class="player-info">
+                <div id="playerTurn">Pemain 1 sedang melihat air</div>
+                <div class="current-water">Air saat ini: <span id="currentWater">0</span> mL</div>
+                <div class="current-water">Kapasitas: 1000 mL</div>
+            </div>
+
+            <div class="glass-container">
+                <div class="glass">
+                    <div class="water" id="waterFill"></div>
+                </div>
+                <div class="water-level" id="waterPercentage">0%</div>
+            </div>
+
+            <div id="viewPhase">
+                <div class="timer" id="countdown">5</div>
+                <p>Lihat baik-baik tingkat air dalam gelas!</p>
+                <p>Layar akan segera gelap untuk menuang...</p>
+            </div>
+
+            <div id="actionPhase" style="display: none;">
+                <button class="btn" id="pourBtn" 
+                        onmousedown="startPouring()" 
+                        onmouseup="stopPouringAndSwitch()"
+                        ontouchstart="startPouring()" 
+                        ontouchend="stopPouringAndSwitch()">
+                    TUANG AIR
+                </button>
+                <p style="margin-top: 10px; color: #666;">Tahan tombol untuk menuang, lepaskan untuk berhenti</p>
+            </div>
+            
+            <div class="creator-credit" style="margin-top: 20px;">
+                Game dibuat oleh Said Khazraji
+            </div>
+        </div>
+
+        <!-- Layar Hasil -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2 id="resultMessage">GELAS MELUAP!</h2>
+            <div class="player-info">
+                <div id="winnerText"></div>
+                <div class="current-water">Total air: <span id="finalWater">0</span> mL</div>
+            </div>
+            <button class="btn" onclick="restartGame()">MAIN LAGI</button>
+            <button class="btn btn-success" onclick="goToMenu()">KEMBALI KE MENU</button>
+            <div class="creator-credit" style="margin-top: 20px;">
+                Game dibuat oleh Said Khazraji
+            </div>
+        </div>
+    </div>
+
+    <!-- Layar Gelap Saat Menuang -->
+    <div id="darkScreen" class="dark-screen" style="display: none;">
+        <div class="btn-container">
+            <h2 style="color: white; margin-bottom: 30px;">LAYAR GELAP - MENUANG AIR</h2>
+            <button class="btn" id="darkPourBtn" 
+                    onmousedown="startPouring()" 
+                    onmouseup="stopPouringAndSwitch()"
+                    ontouchstart="startPouring()" 
+                    ontouchend="stopPouringAndSwitch()">
+                TAHAN UNTUK MENUANG
+            </button>
+            <p style="color: white; margin-top: 20px;">Tahan tombol untuk menuang, lepaskan untuk berhenti</p>
+            <p style="color: #aaa; font-size: 14px; margin-top: 10px;">Game akan otomatis berganti pemain</p>
+            <p style="color: #aaa; font-size: 14px; margin-top: 5px;">Game oleh Said Khazraji</p>
+        </div>
+    </div>
+
+    <script>
+        // Variabel game
+        let currentWater = 0;
+        const maxCapacity = 1000;
+        let currentPlayer = 1;
+        let gameActive = true;
+        let pouringInterval;
+        let viewTimer;
+        let secondsLeft = 5;
+        let isPouring = false;
+
+        // Elemen DOM
+        const waterFill = document.getElementById('waterFill');
+        const waterPercentage = document.getElementById('waterPercentage');
+        const currentWaterDisplay = document.getElementById('currentWater');
+        const currentPlayerDisplay = document.getElementById('currentPlayer');
+        const playerTurnDisplay = document.getElementById('playerTurn');
+        const viewPhase = document.getElementById('viewPhase');
+        const actionPhase = document.getElementById('actionPhase');
+        const darkScreen = document.getElementById('darkScreen');
+        const countdownDisplay = document.getElementById('countdown');
+
+        // Fungsi untuk memulai game
+        function startGame() {
+            resetGame();
+            showScreen('gameScreen');
+            startViewPhase();
+        }
+
+        // Fungsi reset game
+        function resetGame() {
+            currentWater = 0;
+            currentPlayer = 1;
+            gameActive = true;
+            isPouring = false;
+            secondsLeft = 5;
+            updateWaterDisplay();
+            updatePlayerDisplay();
+        }
+
+        // Fungsi untuk menampilkan screen tertentu
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Fase melihat air (5 detik)
+        function startViewPhase() {
+            secondsLeft = 5;
+            countdownDisplay.textContent = secondsLeft;
+            viewPhase.style.display = 'block';
+            actionPhase.style.display = 'none';
+            updatePlayerDisplay();
+
+            playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang melihat air`;
+
+            viewTimer = setInterval(() => {
+                secondsLeft--;
+                countdownDisplay.textContent = secondsLeft;
+
+                if (secondsLeft <= 0) {
+                    clearInterval(viewTimer);
+                    startPourPhase();
+                }
+            }, 1000);
+        }
+
+        // Mulai fase menuang (layar gelap)
+        function startPourPhase() {
+            viewPhase.style.display = 'none';
+            darkScreen.style.display = 'flex';
+            playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang menuang (layar gelap)`;
+        }
+
+        // Mulai menuang air
+        function startPouring() {
+            if (!gameActive || isPouring) return;
+            
+            isPouring = true;
+            playerTurnDisplay.textContent = `Pemain ${currentPlayer} sedang menuang...`;
+
+            pouringInterval = setInterval(() => {
+                currentWater += 10; // 10mL per interval
+                if (currentWater > maxCapacity) {
+                    currentWater = maxCapacity;
+                    endGame();
+                }
+                updateWaterDisplay();
+            }, 100); // Tambah air setiap 100ms
+        }
+
+        // Berhenti menuang air dan langsung ganti pemain
+        function stopPouringAndSwitch() {
+            if (!isPouring) return;
+            
+            clearInterval(pouringInterval);
+            isPouring = false;
+            
+            // Cek apakah game sudah berakhir
+            if (currentWater >= maxCapacity) {
+                endGame();
+                return;
+            }
+            
+            // Ganti pemain otomatis
+            switchPlayer();
+        }
+
+        // Ganti pemain secara otomatis
+        function switchPlayer() {
+            // Sembunyikan layar gelap
+            darkScreen.style.display = 'none';
+            
+            // Ganti pemain
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            
+            // Mulai fase melihat untuk pemain berikutnya
+            startViewPhase();
+        }
+
+        // Update tampilan air
+        function updateWaterDisplay() {
+            const percentage = (currentWater / maxCapacity) * 100;
+            waterFill.style.height = Math.min(percentage, 100) + '%';
+            waterPercentage.textContent = Math.round(Math.min(percentage, 100)) + '%';
+            currentWaterDisplay.textContent = currentWater;
+        }
+
+        // Update tampilan pemain
+        function updatePlayerDisplay() {
+            currentPlayerDisplay.textContent = 'Pemain ' + currentPlayer;
+        }
+
+        // Akhiri game
+        function endGame() {
+            gameActive = false;
+            clearInterval(pouringInterval);
+            clearInterval(viewTimer);
+            isPouring = false;
+
+            const winner = currentPlayer === 1 ? 2 : 1;
+            document.getElementById('resultMessage').textContent = 'GELAS MELUAP!';
+            document.getElementById('winnerText').textContent = 'Pemain ' + winner + ' MENANG!';
+            document.getElementById('finalWater').textContent = currentWater + ' mL';
+
+            // Sembunyikan layar gelap jika masih terbuka
+            darkScreen.style.display = 'none';
+            
+            showScreen('resultScreen');
+        }
+
+        // Restart game
+        function restartGame() {
+            resetGame();
+            showScreen('gameScreen');
+            startViewPhase();
+        }
+
+        // Kembali ke menu
+        function goToMenu() {
+            showScreen('menuScreen');
+        }
+
+        // Event listener untuk mencegah scroll pada mobile saat menahan tombol
+        document.addEventListener('touchstart', function(e) {
+            if(e.target.id === 'pourBtn' || e.target.id === 'darkPourBtn') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Inisialisasi
+        updateWaterDisplay();
+    </script>
+</body>
+</html>
